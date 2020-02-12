@@ -1,13 +1,20 @@
+# Needed for basic bot function
 import dotenv, asyncio, aiohttp, os
 from discord.ext import commands
 
-# Actual fun stuffs
-import random
+# Actual usable stuffs
+import requests
+from random import randint
+
+# NewsAPI Endpoint URL
+NEWSAPI_URL = "https://newsapi.org/v2/"
 
 dotenv.load_dotenv()
-
 # In .env, put BOT_TOKEN="<memobot bot token>"
 TOKEN = os.getenv("BOT_TOKEN")
+# In .env, put NEWSAPI_TOKEN="<token>"
+NEWSAPI_TOKEN = os.getenv("NEWSAPI_TOKEN")
+AUTH_HEAD = {"Authorization": "Bearer "+NEWSAPI_TOKEN}
 
 BOT_PREFIX = ("~")
 client = commands.Bot(command_prefix=BOT_PREFIX)
@@ -18,11 +25,24 @@ async def on_ready():
 
 @client.command(pass_context=True, name="test")
 async def test(context): #~test
-    await context.send("test")
+    endpoint = NEWSAPI_URL+"top-headlines?" + "country=us"
+    res = requests.get(endpoint, headers=AUTH_HEAD)
+    res = str(res.json())[0:1000]
+    await context.send(res)
 
-@client.command(pass_context=True, name="pull", help="Updates news from sources")
+@client.command(pass_context=True, name="pull", help="Updates news from sources and cache it")
 async def pull(context): #~pull
     await context.send("not yet implemented") #TODO: Add stuff from news aggregator i can't spell
+
+
+@client.command(pass_context=True, name="top", help="Looks for the top headlines and lists them. Takes optional parameter <country>, defaults to \"us\"")
+async def top(context, country="us"):
+    if len(country) != 2:
+        await context.send("[error country_code_bad_length]")
+    endpoint = NEWSAPI_URL+"top-headlines?" + "country=" + country
+    res = requests.get(endpoint, headers=AUTH_HEAD)
+    res = str(res.json())[0:1000]
+    await context.send(res)
 
 
 @client.command(pass_context=True, name='roll', help='Simulates rolling dice.')
