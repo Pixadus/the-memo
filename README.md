@@ -9,6 +9,7 @@ This headline would be thrown in both US News and Tech news.
 
 ## To-Do:
 - [X] Initialize project, choose language
-- [ ] Define sources (RSS feeds, newsapi.org, etc)
+- [X] Define sources (RSS feeds, newsapi.org, etc)
+-    Chosen [NewsAPI.org](newsapi.org)
 - [ ] Create system to pull from these sources (bs4, lxml)
 - [ ] Implement source-to-text-channel
