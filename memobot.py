@@ -1,10 +1,11 @@
 # Needed for basic bot function
 import dotenv, asyncio, aiohttp, os
 from discord.ext import commands
+from discord import Embed
 
 # Actual usable stuffs
 import requests
-from random import randint
+import random
 
 # NewsAPI Endpoint URL
 NEWSAPI_URL = "https://newsapi.org/v2/"
@@ -36,13 +37,45 @@ async def pull(context): #~pull
 
 
 @client.command(pass_context=True, name="top", help="Looks for the top headlines and lists them. Takes optional parameter <country>, defaults to \"us\"")
-async def top(context, country="us"):
-    if len(country) != 2:
+async def top(context, country="us", page="1"):
+    if country is None or len(country) != 2:
         await context.send("[error country_code_bad_length]")
+        return None
+    if page is None or not page.isdigit():
+        await context.send("[error bad_page_num]")
+        return None
+
+    if int(page) < 1:
+        page = 1
+    page = int(page)
+    topList = []
+    start = (page - 1) * 8
+    end = 8 + (page - 1) * 8
+    count = 0
+
     endpoint = NEWSAPI_URL+"top-headlines?" + "country=" + country
     res = requests.get(endpoint, headers=AUTH_HEAD)
-    res = str(res.json())[0:1000]
-    await context.send(res)
+    res = res.json()
+    for article in res["articles"]:
+        if start <= count:
+            topList.append(article)
+        if count >= end:
+            break
+        count += 1
+
+    embed = Embed(
+        color=344703,
+        title="Top News in "+country  #TODO: Map country code to country name
+    )
+    embed.set_footer(text="Powered by newsapi.org")
+
+    # Actually put the news in
+    for article in topList:
+        embed.add_field(name=article.get("description", "[error desc_not_found]")[:255],
+            value="[" + article.get("title", "[error title_not_found]") + "](" + article.get("url", "[error url_not_found]") + ")")
+
+    embed.add_field(name="Note", value="To view next page, please use "+BOT_PREFIX+"top "+country+" "+str(page+1), inline=True)
+    await context.send(embed=embed) #"\n".join(topList))
 
 
 @client.command(pass_context=True, name='roll', help='Simulates rolling dice.')
